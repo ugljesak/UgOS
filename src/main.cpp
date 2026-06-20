@@ -5,12 +5,10 @@
 #include "../lib/console.h"
 #include "../h/MemoryAllocator.hpp"
 
+extern void memoryAllocatorTest();
+
 int main() {
-    char ch = __getc();
-    __putc(ch);
-    __putc('\n');
-    void* test = nullptr;
-    MemoryAllocator::mem_free(test);
+    memoryAllocatorTest();
 
     return 0;
 }

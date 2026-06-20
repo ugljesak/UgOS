@@ -18,6 +18,10 @@ private:
         FreeBlockHeader* next;
     };
     static FreeBlockHeader* freeMemHead;
+
+    static void init();
+
+    static void tryCoalesce(FreeBlockHeader* ptr);
 };
 
 #endif  // UGOS_MEMORY_ALLOCATOR_H
