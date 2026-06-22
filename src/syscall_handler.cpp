@@ -1,28 +1,44 @@
-//
-// Created by ugoboss on 6/12/26.
-//
-
 #include "../h/MemoryAllocator.hpp"
 
-extern "C" void handle_trap() {
+extern "C" uint64 handle_syscall(uint64 a0, uint64 a1, uint64 a2, uint64 a3);
 
-    unsigned code;
-    asm volatile("csrr %0, a0" : "=r" (code));
+extern "C" uint64 handle_trap(uint64 cause, uint64 a0, uint64 a1, uint64 a2, uint64 a3) { 
+    
+    if(cause & (1UL << 63)) {
+        // Spoljasnji prekid
+        return 0UL;
+    }
+    else{
+        // Unutrasnji prekid
+        switch(cause) {
+            // case 0x02:
+            //     break;
+            // case 0x05:
+            //     break;
+            // case 0x07:
+            //     break;
+            // case 0x08:
+            //     break;    
+            case 0x09:
+                return handle_syscall(a0, a1, a2, a3);
+                break;
+            default:
+                // Ne sme se ovde doci.
+                return 0UL;
+        }
+    }
+}
 
-    switch (code) {
+uint64 handle_syscall(uint64 a0, uint64 a1, uint64 a2, uint64 a3) {
+    
+    switch (a0) {
         case 0x01:
-            size_t size;
-            asm volatile("csrr %0, a1" : "=r" (size));
-            MemoryAllocator::mem_alloc(size);
-            break;
+            return (uint64)MemoryAllocator::mem_alloc((size_t)a1 * MEM_BLOCK_SIZE);
         case 0x02:
-            void* ptr;
-            asm volatile("csrr %0, a1" : "=r" (ptr));
-            MemoryAllocator::mem_free(ptr);
-            break;
+            return (uint64)MemoryAllocator::mem_free((void*)a1);
         //case 0x11:
             //...
         default:
-            return;
+            return 0UL;
     }
 }

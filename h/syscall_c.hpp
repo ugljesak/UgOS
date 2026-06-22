@@ -1,7 +1,3 @@
-//
-// Created by ugoboss on 6/12/26.
-//
-
 #ifndef UGOS_SYSCALL_C_HPP
 #define UGOS_SYSCALL_C_HPP
 

@@ -1,7 +1,3 @@
-//
-// Created by ugoboss on 6/10/26.
-//
-
 #ifndef UGOS_MEMORY_ALLOCATOR_H
 #define UGOS_MEMORY_ALLOCATOR_H
 
@@ -11,17 +7,18 @@ class MemoryAllocator {
 public:
     static void* mem_alloc(size_t size);
     static int mem_free(void* ptr);
+    static void init();
 
+    static void printList();
+    
 private:
     struct FreeBlockHeader {
         size_t size;
         FreeBlockHeader* next;
     };
     static FreeBlockHeader* freeMemHead;
-
-    static void init();
-
-    static void tryCoalesce(FreeBlockHeader* ptr);
+    
+    static void tryMerge(FreeBlockHeader* ptr);
 };
 
 #endif  // UGOS_MEMORY_ALLOCATOR_H

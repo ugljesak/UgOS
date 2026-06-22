@@ -1,8 +1,6 @@
-//
-// Created by ugoboss on 6/10/26.
-//
-
 #include "../h/MemoryAllocator.hpp"
+#include "../h/utils.hpp"
+
 
 MemoryAllocator::FreeBlockHeader* MemoryAllocator::freeMemHead = nullptr;
 
@@ -14,18 +12,12 @@ void MemoryAllocator::init() {
 }
 
 void* MemoryAllocator::mem_alloc(size_t size) {
-
-    if (freeMemHead == nullptr) {
-        init();
-    }
-
+    
     FreeBlockHeader* curr = freeMemHead;
     FreeBlockHeader* prev = nullptr;
 
-    size_t alignedSize = ((size + MEM_BLOCK_SIZE - 1) / MEM_BLOCK_SIZE) * MEM_BLOCK_SIZE;
-
     for (; curr != nullptr; prev = curr, curr = curr->next) {
-        if (curr->size >= alignedSize) {
+        if (curr->size >= size) {
             break;
         }
     }
@@ -34,10 +26,10 @@ void* MemoryAllocator::mem_alloc(size_t size) {
         return nullptr;
     }
 
-    size_t remSize = curr->size - alignedSize;
+    size_t remSize = curr->size - size;
     if (remSize >= sizeof(FreeBlockHeader) + MEM_BLOCK_SIZE) {
-        size_t offset = sizeof(FreeBlockHeader) + alignedSize;
-        curr->size = alignedSize;
+        size_t offset = sizeof(FreeBlockHeader) + size;
+        curr->size = size;
 
         FreeBlockHeader* newBlock = (FreeBlockHeader*)((char*)curr + offset);
         if (prev != nullptr) {
@@ -61,7 +53,7 @@ void* MemoryAllocator::mem_alloc(size_t size) {
     return (char*)curr + sizeof(FreeBlockHeader);
 }
 
-void MemoryAllocator::tryCoalesce(FreeBlockHeader* ptr) {
+void MemoryAllocator::tryMerge(FreeBlockHeader* ptr) {
     if (ptr == nullptr || ptr->next == nullptr) {
         return;
     }
@@ -95,8 +87,24 @@ int MemoryAllocator::mem_free(void *ptr) {
     }
     target->next = curr;
 
-    tryCoalesce(curr);
-    tryCoalesce(prev);
+    tryMerge(target);
+    tryMerge(prev);
 
     return 0;
+}
+
+void MemoryAllocator::printList() {
+    printLine("--- Free List ---");
+    FreeBlockHeader* curr = freeMemHead;
+    int i = 0;
+    while (curr != nullptr) {
+        printString("[");
+        printHex((uint64)curr);
+        printString(" size=");
+        printHex(curr->size);
+        printString("]\n");
+        curr = curr->next;
+        if (++i > 10) break;
+    }
+    printString("---\n");
 }
