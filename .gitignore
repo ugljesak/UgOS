@@ -21,3 +21,4 @@ kernel.asm
 *.o
 *.d
 *.lst
+*.s

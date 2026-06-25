@@ -11,6 +11,7 @@ void testMemoryAllocator() {
 
     printLine("Start");
     void* a=mem_alloc(64);
+    printValue("a", (uint64)a);
     if(a) {
         printLine("Allocated a.");
     }
@@ -27,4 +28,5 @@ void testMemoryAllocator() {
     mem_free(b);
     mem_free(p);
     printLine("Freed b and p.");
+    a = a;
 }
