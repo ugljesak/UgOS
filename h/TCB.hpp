@@ -12,6 +12,7 @@ public:
     static TCB* toFree;
 
     static TCB* create(Body body, void* arg);
+    static TCB* createUserThread(Body body, void* arg);
     static int exit();
     static void dispatch();
 
@@ -23,6 +24,7 @@ public:
 private:
     //TCB(Body body, void* arg);
     static void start();
+    static void userThreadStart(void);
     static void lazyFree();
 
     void* kernelStack = nullptr; //0 48080 [480c0 - 880bf]

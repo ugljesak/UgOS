@@ -1,5 +1,6 @@
 #include "../h/MemoryAllocator.hpp"
 #include "../h/TCB.hpp"
+#include "../h/utils.hpp"
 
 
 struct Frame {
@@ -17,16 +18,17 @@ struct Frame {
 uint64 handle_syscall(uint64 a0, uint64 a1, uint64 a2, uint64 a3);
 
 uint64 handle_trap(uint64 cause, uint64 a0, uint64 a1, uint64 a2, uint64 a3, uint64 sp) { 
-    
+    //printValue("TRAP cause", cause);
     if(cause & (1UL << 63)) {
-        // Spoljasnji prekid
+        //TCB::dispatch();
         return 0UL;
     }
     else{
         // Unutrasnji prekid
         switch(cause) {
-            // case 0x02:
-            //     break;
+            case 0x02:
+                printLine("Nono, it's user mode.");
+                return 0;
             // case 0x05:
             //     break;
             // case 0x07:

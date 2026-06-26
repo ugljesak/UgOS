@@ -1,3 +1,5 @@
+#ifndef UGOS_TESTSYSTEMTHREAD_HPP
+#define UGOS_TESTSYSTEMTHREAD_HPP
 
 #include "syscall_c.hpp"
 #include "TCB.hpp"
@@ -122,3 +124,6 @@ void System_Mode_test() {
     }
 
 }
+
+
+#endif // UGOS_TESTSYSTEMTHREAD_HPP

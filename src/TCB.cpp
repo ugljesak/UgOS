@@ -4,7 +4,6 @@
 
 
 void yield(TCB* oldThread, TCB* newThread);
-void userThreadStart(void*);
 
 TCB* TCB::running = nullptr;
 TCB* TCB::toFree = nullptr;
@@ -83,19 +82,21 @@ TCB* TCB::createUserThread(Body body, void* arg) {
     uint64 usp = (uint64)((char*)tcb->userStack + 64 * DEFAULT_STACK_SIZE);
     usp &= ~0xFUL;
 
-    ksp -= 13;
+    ksp -= 104;
     uint64* frame = (uint64*)ksp;
-    frame[0] = (uint64)userThreadStart; //ra
+
+    frame[0] = (uint64)&userThreadStart; //ra
     frame[1] = (uint64)body; //s0
     frame[2] = usp; //s1
     frame[3] = (uint64)arg; //s2
-    frame[4] = ksp + 13; //s3
+    frame[4] = ksp; //s3
     for(int i = 5; i < 13; ++i) {
         frame[i] = 0;
     }
 
     tcb->sp =ksp;
     Scheduler::put(tcb);
+    Scheduler::printQueue();
     return tcb;
 }
 
@@ -124,17 +125,19 @@ int TCB::exit() {
 
 void TCB::dispatch() {
     lazyFree();
-
+    // static int cnt;
+    // printValue("Dispatch cnt", cnt);
+    // cnt++;
     TCB* oldT = TCB::running;
-    Scheduler::put(oldT);
+    if(!oldT->isFinished( )) {
+        Scheduler::put(oldT);
+    }
 
     TCB* newT = Scheduler::get();
     TCB::running = newT;
     //newT->debugPrint();
     yield(oldT, newT);
 }
-
-extern void hook();
 
 void TCB::init() {
     TCB* mainT = (TCB*)MemoryAllocator::mem_alloc(sizeof(TCB));

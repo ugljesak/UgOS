@@ -1,3 +1,6 @@
+#ifndef KURCINA
+#define KURCINA
+
 #include "../lib/console.h"
 #include "../h/syscall_c.hpp"
 #include "../h/utils.hpp"
@@ -30,3 +33,5 @@ void testMemoryAllocator() {
     printLine("Freed b and p.");
     a = a;
 }
+
+#endif // KURCINA

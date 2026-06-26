@@ -1,3 +1,6 @@
+#ifndef UGOS_UTILS_HPP
+#define UGOS_UTILS_HPP
+
 #include "../lib/console.h"
 #include "../lib/hw.h"
 
@@ -46,3 +49,5 @@ inline void printValue(const char* name, uint64 val) {
     printHex(val);
     __putc('\n');
 }
+
+#endif // UGOS_UTILS_HPP

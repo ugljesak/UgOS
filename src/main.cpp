@@ -1,8 +1,9 @@
 #include "../lib/hw.h"
-#include "../h/testMemoryAllocator.hpp"
-#include "../h/testSystemThread.hpp"
 #include "../h/TCB.hpp"
 #include "../h/Scheduler.hpp"
+#include "../h/utils.hpp"
+#include "../h/testMemoryAllocator.hpp"
+#include "../h/testSystemThread.hpp"
 
 void trap_entry(); 
 extern void userMain(void*);
@@ -18,6 +19,14 @@ int main() {
 
     // System_Mode_test();
     // printLine("Finished threads testing.");
+    printLine("Stigao.");
+
+
+    testMemoryAllocator();
+    printLine("Finished memory testing.");
+
+    System_Mode_test();
+    printLine("Finished threads testing.");
 
     while(!user->isFinished()) {
         TCB::dispatch();

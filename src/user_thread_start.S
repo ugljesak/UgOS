@@ -1,10 +1,11 @@
-.global _Z15userThreadStartPv
+.global _ZN3TCB15userThreadStartEv
 .align 4
-.type _Z15userThreadStartPv @function
+.type _ZN3TCB15userThreadStartEv @function
 
-_Z15userThreadStartPv:
+_ZN3TCB15userThreadStartEv:
     # s0 = body, s1 = userSP, s2 = arg, s3 = kernelSP
 
+    csrci sstatus, 2
     la ra, userThreadExit
 
     csrw sepc, s0
@@ -21,3 +22,8 @@ _Z15userThreadStartPv:
     mv sp, s1
 
     sret
+
+.global userThreadExit
+userThreadExit:
+    li a0, 0x12
+    ecall
