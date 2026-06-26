@@ -3,6 +3,8 @@
 .type _Z5yieldP3TCBS0_ @function
 
 _Z5yieldP3TCBS0_:
+    # a0 = oldThread, a1 = newThread
+
     addi sp, sp, -104
     
     sd ra, 0(sp)
@@ -21,10 +23,10 @@ _Z5yieldP3TCBS0_:
     sd s11, 96(sp)
 
 
-    #SP offset: (void*) x2 = 16
-    sd sp, 8(a0) 
-    ld sp, 8(a1)
-
+    #SP offset in class: 40
+    sd sp, 40(a0) 
+    ld sp, 40(a1)
+    
 
     ld ra, 0(sp)
 

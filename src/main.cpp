@@ -5,25 +5,24 @@
 #include "../h/Scheduler.hpp"
 
 void trap_entry(); 
+extern void userMain(void*);
 
 int main() {
     MemoryAllocator::init();
     asm volatile("csrw stvec, %0" : : "r"(&trap_entry));
+    TCB::init();
 
-    TCB* main = (TCB*)MemoryAllocator::mem_alloc(sizeof(TCB));
-    main->kernelStack = MemoryAllocator::mem_alloc(64 * DEFAULT_STACK_SIZE);
-    main->sp  = (uint64)((char*)main->kernelStack + 64 * DEFAULT_STACK_SIZE - 104);
+    TCB* user = TCB::createUserThread(userMain, nullptr);
+    // testMemoryAllocator();
+    // printLine("Finished memory testing.");
 
-    asm volatile("csrw sscratch, %0" : : "r"(main->sp));
+    // System_Mode_test();
+    // printLine("Finished threads testing.");
 
-    TCB::running = main;
+    while(!user->isFinished()) {
+        TCB::dispatch();
+    }
 
-    //testMemoryAllocator();
-    //printLine("Finished memory testing.");
-
-    System_Mode_test();
-    printLine("Finished threads testing.");
-    
     asm volatile(
         "li t0, 0x100000\n"
         "li t1, 0x5555\n"

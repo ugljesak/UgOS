@@ -9,7 +9,7 @@ void Scheduler::put(TCB* thread) {
     if(tail == nullptr) {
         head = thread;
         tail = thread;
-        head->next = tail;
+        //head->next = tail;
         return;    
     }
 
@@ -37,10 +37,13 @@ void Scheduler::printQueue() {
     TCB* t = head;
     int i = 0;
     do {
-        printValue("TCB", (uint64)t);                                    
-        printValue("body", (uint64)t->body);                             
-        printValue("sp", t->sp);                                         
-        printValue("fin", t->finished); 
+        printValue("TCB", (uint64)t);
+        printValue("body", (uint64)t->body);
+        printValue("user stack", (uint64)t->userStack);
+        printValue("kernel stack", (uint64)t->kernelStack);
+        printValue("sp", t->sp);
+        printString("*t->sp = "); printHex((uint64)(*((uint64*)(t->sp)))); printString("\n");
+        printValue("fin", t->finished);
         printLine("|");
         printLine("v");
         t = t->next;

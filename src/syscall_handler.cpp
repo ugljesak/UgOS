@@ -2,6 +2,18 @@
 #include "../h/TCB.hpp"
 
 
+struct Frame {
+    uint64 ra;
+    uint64 sp;
+    uint64 gp;
+    uint64 tp;
+    uint64 t[7];
+    uint64 s[12];
+    uint64 a[8];
+    uint64 sepc;
+    uint64 sstatus;
+};
+
 uint64 handle_syscall(uint64 a0, uint64 a1, uint64 a2, uint64 a3);
 
 uint64 handle_trap(uint64 cause, uint64 a0, uint64 a1, uint64 a2, uint64 a3, uint64 sp) { 
@@ -22,8 +34,12 @@ uint64 handle_trap(uint64 cause, uint64 a0, uint64 a1, uint64 a2, uint64 a3, uin
             case 0x08:
             case 0x09: {
                 uint64 volatile ret = handle_syscall(a0, a1, a2, a3);
-                ((uint64*)sp)[31] += 4; // sepc += 4;
-                ((uint64*)sp)[23] = ret; // a0 = ret;
+                // ((uint64*)sp)[31] += 4; // sepc += 4;
+                // ((uint64*)sp)[23] = ret; // a0 = ret;
+                Frame* frame = (Frame*)sp;
+                frame->sepc += 4;
+                frame->a[0] = ret;
+                
                 return ret;
             }
             default:

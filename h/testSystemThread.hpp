@@ -99,22 +99,25 @@ void System_Mode_test() {
     thread_t threads[4];
 
     thread_create(&threads[0], workerBodyA, nullptr);
-    printLine("ThreadA created");
+    if(threads[0] != nullptr) printLine("ThreadA created");
 
     thread_create(&threads[1], workerBodyB, nullptr);
-    printLine("ThreadB created");
+    if(threads[1] != nullptr) printLine("ThreadB created");
 
     thread_create(&threads[2], workerBodyC, nullptr);
-    printString("ThreadC created\n");
+    if(threads[2] != nullptr) printString("ThreadC created\n");
 
     thread_create(&threads[3], workerBodyD, nullptr);
-    printString("ThreadD created\n");
+    if(threads[3] != nullptr) printString("ThreadD created\n");
     
     printLine("-----------------------");
     Scheduler::printQueue();
     printLine("-----------------------");
 
-    while (!(finishedA && finishedB && finishedC)) {
+    while (!(finishedA && finishedB && finishedC && finishedD)) {
+        // printReg("sp", 0);
+        // printReg("sscratch", 1);
+
         thread_dispatch();
     }
 
