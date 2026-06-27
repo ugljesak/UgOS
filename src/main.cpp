@@ -2,40 +2,29 @@
 #include "../h/TCB.hpp"
 #include "../h/Scheduler.hpp"
 #include "../h/utils.hpp"
-#include "../h/testMemoryAllocator.hpp"
-#include "../h/testSystemThread.hpp"
+#include "../h/syscall_c.hpp"
+#include "../h/Controller.hpp"
 
 void trap_entry(); 
 extern void userMain(void*);
 
 int main() {
     MemoryAllocator::init();
-    asm volatile("csrw stvec, %0" : : "r"(&trap_entry));
-    TCB::init();
-
-    TCB* user = TCB::createUserThread(userMain, nullptr);
-    // testMemoryAllocator();
-    // printLine("Finished memory testing.");
-
-    // System_Mode_test();
-    // printLine("Finished threads testing.");
-    printLine("Stigao.");
-
-
-    testMemoryAllocator();
-    printLine("Finished memory testing.");
-
-    System_Mode_test();
-    printLine("Finished threads testing.");
-
+    Controller::write_stvec((uint64)&trap_entry);
+    //asm volatile("csrw stvec, %0" : : "r"((uint64)&trap_entry));
+    //TCB::init();
+    
+    //TCB* mainT = TCB::createMain(nullptr, nullptr);
+    TCB* mainT = new TCB(nullptr, nullptr);
+    TCB::running = mainT;
+    
+    TCB* user = TCB::create(userMain, nullptr);
+    //Scheduler::printQueue();
     while(!user->isFinished()) {
-        TCB::dispatch();
+        
+        thread_dispatch();
     }
 
-    asm volatile(
-        "li t0, 0x100000\n"
-        "li t1, 0x5555\n"
-        "sw t1, 0(t0)\n"
-    );
+    Controller::exit();
     return 0;
 }

@@ -37,12 +37,12 @@ void Scheduler::printQueue() {
     TCB* t = head;
     int i = 0;
     do {
-        printValue("TCB", (uint64)t);
+        printValue("TCB_id", (uint64)t->id);
         printValue("body", (uint64)t->body);
         printValue("user stack", (uint64)t->userStack);
-        printValue("kernel stack", (uint64)t->kernelStack);
-        printValue("sp", t->sp);
-        printString("*t->sp = "); printHex((uint64)(*((uint64*)(t->sp)))); printString("\n");
+        // printValue("kernel stack", (uint64)t->kernelStack);
+        printValue("ra", (uint64)t->context.ra);
+        printValue("sp", t->context.sp);
         printValue("fin", t->finished);
         printLine("|");
         printLine("v");

@@ -3,17 +3,19 @@
 .type _Z10trap_entryv @function
 
 _Z10trap_entryv:
-    csrrw sp, sscratch, sp
+    #csrrw sp, sscratch, sp
     addi sp, sp, -264
     
     sd ra, 0(sp) 
-    csrr ra, sscratch
-    sd ra, 8(sp)
 
     sd gp, 16(sp)
     sd tp, 24(sp)
     
     sd t0, 32(sp)
+    # use t0 to store userSP
+    #csrr t0, sscratch
+    sd t0, 8(sp)
+    
     sd t1, 40(sp)
     sd t2, 48(sp)
     sd t3, 56(sp)
@@ -48,11 +50,11 @@ _Z10trap_entryv:
     csrr t0, sstatus
     sd t0, 256(sp)
 
-    mv a5, sp
-    mv a4, a3
-    mv a3, a2
-    mv a2, a1
-    mv a1, a0
+    mv a5, a3
+    mv a4, a2
+    mv a3, a1
+    mv a2, a0
+    mv a1, sp
     csrr a0, scause
     call _Z11handle_trapmmmmmm
     
@@ -62,8 +64,9 @@ _Z10trap_entryv:
     ld t0, 256(sp)
     csrw sstatus, t0
 
-    ld t0, 8(sp)
-    csrw sscratch, t0
+    # use t0 to restore userSP
+    #ld t0, 8(sp)
+    #csrw sscratch, t0
     ld ra, 0(sp) 
 
     ld gp, 16(sp)
@@ -100,6 +103,6 @@ _Z10trap_entryv:
     ld a7, 240(sp)
 
     addi sp, sp, 264
-    csrrw sp, sscratch, sp
+    #csrrw sp, sscratch, sp
 
     sret

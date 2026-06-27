@@ -48,6 +48,7 @@ static void workerBodyB(void* arg) {
 }
 
 static void workerBodyC(void* arg) {
+    printLine("Usao u telo C");
     uint8 i = 0;
     for (; i < 3; i++) {
         printString("C: i="); printInt(i); printString("\n");
@@ -75,6 +76,7 @@ static void workerBodyC(void* arg) {
 }
 
 static void workerBodyD(void* arg) {
+    printLine("Usao u telo D");
     uint8 i = 10;
     for (; i < 13; i++) {
         printString("D: i="); printInt(i); printString("\n");
