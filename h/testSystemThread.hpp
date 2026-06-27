@@ -13,7 +13,7 @@ static volatile bool finishedD = false;
 
 static uint64 fibonacci(uint64 n) {
     if (n == 0 || n == 1) { return n; }
-    if (n % 10 == 0) { thread_dispatch(); }
+    //if (n % 10 == 0) { thread_dispatch(); }
     return fibonacci(n - 1) + fibonacci(n - 2);
 }
 
@@ -23,7 +23,7 @@ static void workerBodyA(void* arg) {
         printString("A: i="); printInt(i); printString("\n");
         for (uint64 j = 0; j < 10000; j++) {
             for (uint64 k = 0; k < 30000; k++) { /* busy wait */ }
-            thread_dispatch();
+            //thread_dispatch();
         }
     }
     printString("A finished!\n");
@@ -36,7 +36,7 @@ static void workerBodyB(void* arg) {
         printString("B: i="); printInt(i); printString("\n");
         for (uint64 j = 0; j < 10000; j++) {
             for (uint64 k = 0; k < 30000; k++) { /* busy wait */ }
-            thread_dispatch();
+            //thread_dispatch();
         }
         if (i == 10) {
             asm volatile("csrr t6, sepc");
@@ -44,7 +44,7 @@ static void workerBodyB(void* arg) {
     }
     printString("B finished!\n");
     finishedB = true;
-    thread_dispatch();
+    //thread_dispatch();
 }
 
 static void workerBodyC(void* arg) {
@@ -56,7 +56,7 @@ static void workerBodyC(void* arg) {
 
     printString("C: dispatch\n");
     __asm__ ("li t1, 7");
-    thread_dispatch();
+    //thread_dispatch();
 
     uint64 t1 = 0;
     __asm__ ("mv %[t1], t1" : [t1] "=r"(t1));
@@ -72,7 +72,7 @@ static void workerBodyC(void* arg) {
 
     printString("C finished!\n");
     finishedC = true;
-    thread_dispatch();
+    //thread_dispatch();
 }
 
 static void workerBodyD(void* arg) {
@@ -84,7 +84,7 @@ static void workerBodyD(void* arg) {
 
     printString("D: dispatch\n");
     __asm__ ("li t1, 5");
-    thread_dispatch();
+    //thread_dispatch();
 
     uint64 result = fibonacci(16);
     printString("D: fibonaci="); printInt(result); printString("\n");
@@ -95,7 +95,7 @@ static void workerBodyD(void* arg) {
 
     printString("D finished!\n");
     finishedD = true;
-    thread_dispatch();
+    //thread_dispatch();
 }
 
 

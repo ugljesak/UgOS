@@ -11,16 +11,18 @@ extern void userMain(void*);
 int main() {
     MemoryAllocator::init();
     Controller::write_stvec((uint64)&trap_entry);
-    //asm volatile("csrw stvec, %0" : : "r"((uint64)&trap_entry));
-    //TCB::init();
     
-    //TCB* mainT = TCB::createMain(nullptr, nullptr);
-    TCB* mainT = new TCB(nullptr, nullptr);
+    //TCB* mainT = TCB::create(nullptr, nullptr);
+    TCB* mainT = new TCB(nullptr, nullptr, DEFAULT_TIME_SLICE);
     TCB::running = mainT;
     
     TCB* user = TCB::create(userMain, nullptr);
+    //thread_t* user = nullptr;
+    //thread_create(user, userMain, nullptr);
     //Scheduler::printQueue();
-    while(!user->isFinished()) {
+    Controller::mask_set_sstatus(Controller::SSTATUS_SIE);
+    
+    while(!(user)->isFinished()) {
         
         thread_dispatch();
     }

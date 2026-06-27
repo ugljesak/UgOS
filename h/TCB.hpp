@@ -8,7 +8,7 @@
 struct Context {
     uint64 ra;
     uint64 sp;
-    uint64 s[12];
+    //uint64 s[12];
 };
 
 class TCB {
@@ -16,21 +16,22 @@ class TCB {
     
 public:
     static TCB* running;
-    static TCB* toFree;
-    static uint64 timeSlice;
-    static uint64 timeCounter;
     static int counter;
     
     static TCB* create(Body body, void* arg);
     static TCB* createMain(Body body, void* arg);
     //static TCB* createUserThread(Body body, void* arg);
-    static int exit();
     static void dispatch();
     
     inline Context* getContext() {return &context;}
 
-    inline bool isFinished() const { return finished;}
+    inline bool isFinished() const {return finished;}
     
+    inline uint64 getTimeSlice() const { return timeSlice;}
+    inline static uint64 getTimeCounter() { return timeCounter;}
+    inline static void incTimeCounter() {timeCounter++;}
+    inline static void resetTimeCounter() {timeCounter = 0;}
+
     static void init();
     void debugPrint();
 
@@ -52,25 +53,28 @@ public:
         delete[] userStack;
     }
 
-    TCB(Body body, void* arg);
+    TCB(Body body, void* arg, uint64 timeSlice);
 private:
 
     static void lazyFree();
-
-    uint64* userStack = nullptr; //8 48090 [880d0 - c80cf]
+    static TCB* toFree;
+    static uint64 timeCounter;
+    
+    uint64* userStack;
     Context context;
 
-    Body body = nullptr; //16 48078
-    void* arg = nullptr; //24 48088
-
-    //uint64* kernelStack = nullptr; //0 48080 [480c0 - 880bf]
-    
-    TCB* next = nullptr; //32 48098
-    bool finished = false; //48 480a8
     int id;
+    uint64 timeSlice;
+
+    Body body;
+    void* arg;
+    
+    TCB* next = nullptr;
+    bool finished = false;
+    
+    
 
     static void threadWrapper();
-    //static void userThreadWrapper();
     static void yield(::Context* oldContext, ::Context* newContext);
 
     friend class Scheduler;
