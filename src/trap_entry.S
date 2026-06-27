@@ -1,10 +1,11 @@
 .global _Z10trap_entryv
+#.global restore_and_sret
 .align 4
 .type _Z10trap_entryv @function
 
 _Z10trap_entryv:
     #csrrw sp, sscratch, sp
-    addi sp, sp, -264
+    addi sp, sp, -272
     
     sd ra, 0(sp) 
 
@@ -59,6 +60,7 @@ _Z10trap_entryv:
     call _Z11handle_trapmmmmmm
     
 
+#restore_and_sret:
     ld t0, 248(sp)
     csrw sepc, t0
     ld t0, 256(sp)
@@ -102,7 +104,7 @@ _Z10trap_entryv:
     ld a6, 232(sp)
     ld a7, 240(sp)
 
-    addi sp, sp, 264
+    addi sp, sp, 272
     #csrrw sp, sscratch, sp
 
     sret

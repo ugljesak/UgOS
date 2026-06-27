@@ -33,8 +33,10 @@ TCB::TCB(Body body, void* arg, uint64 timeSlice) :
     
 }
 
+//extern "C" void restore_and_sret();
 TCB* TCB::create(Body body, void* arg) {
     TCB* tcb = new TCB(body, arg, DEFAULT_TIME_SLICE);
+        
     tcb->context.ra = (uint64)&threadWrapper;
     tcb->context.sp = (uint64)((char*)tcb->userStack + DEFAULT_STACK_SIZE);
     tcb->context.sp &= ~0xF;

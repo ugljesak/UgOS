@@ -13,6 +13,8 @@ void MemoryAllocator::init() {
 
 void* MemoryAllocator::mem_alloc(size_t size) {
     
+    size_t headerSize = (sizeof(FreeBlockHeader) + MEM_BLOCK_SIZE - 1)/MEM_BLOCK_SIZE*MEM_BLOCK_SIZE;
+
     FreeBlockHeader* curr = freeMemHead;
     FreeBlockHeader* prev = nullptr;
 
@@ -27,8 +29,8 @@ void* MemoryAllocator::mem_alloc(size_t size) {
     }
 
     size_t remSize = curr->size - size;
-    if (remSize >= sizeof(FreeBlockHeader) + MEM_BLOCK_SIZE) {
-        size_t offset = sizeof(FreeBlockHeader) + size;
+    if (remSize >= headerSize + MEM_BLOCK_SIZE) {
+        size_t offset = headerSize + size;
         curr->size = size;
 
         FreeBlockHeader* newBlock = (FreeBlockHeader*)((char*)curr + offset);
@@ -39,7 +41,7 @@ void* MemoryAllocator::mem_alloc(size_t size) {
             freeMemHead = newBlock;
         }
         newBlock->next = curr->next;
-        newBlock->size = remSize - sizeof(FreeBlockHeader);
+        newBlock->size = remSize - headerSize;
     }
     else {
         if (prev) {
@@ -50,15 +52,17 @@ void* MemoryAllocator::mem_alloc(size_t size) {
         }
     }
     curr->next = nullptr;
-    return (char*)curr + sizeof(FreeBlockHeader);
+    return (char*)curr + headerSize;
 }
 
 void MemoryAllocator::tryMerge(FreeBlockHeader* ptr) {
+    size_t headerSize = (sizeof(FreeBlockHeader) + MEM_BLOCK_SIZE - 1)/MEM_BLOCK_SIZE*MEM_BLOCK_SIZE;
+
     if (ptr == nullptr || ptr->next == nullptr) {
         return;
     }
-    if ((char*)ptr + sizeof(FreeBlockHeader) + ptr->size == (char*)ptr->next) {
-        ptr->size += sizeof(FreeBlockHeader) + ptr->next->size;
+    if ((char*)ptr + headerSize + ptr->size == (char*)ptr->next) {
+        ptr->size += headerSize + ptr->next->size;
         ptr->next = ptr->next->next;
     }
 }
@@ -67,8 +71,9 @@ int MemoryAllocator::mem_free(void *ptr) {
     if (ptr == nullptr) {
         return -1;
     }
+    size_t headerSize = (sizeof(FreeBlockHeader) + MEM_BLOCK_SIZE - 1)/MEM_BLOCK_SIZE*MEM_BLOCK_SIZE;
 
-    FreeBlockHeader* target = (FreeBlockHeader*)((char*)ptr - sizeof(FreeBlockHeader));
+    FreeBlockHeader* target = (FreeBlockHeader*)((char*)ptr - headerSize);
 
     FreeBlockHeader* curr = freeMemHead;
     FreeBlockHeader* prev = nullptr;

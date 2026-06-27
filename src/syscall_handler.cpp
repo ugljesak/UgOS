@@ -23,7 +23,7 @@ uint64 handle_timer();
 uint64 handle_trap(uint64 cause, uint64 sp, uint64 a0, uint64 a1, uint64 a2, uint64 a3) { 
     //printValue("TRAP cause", cause);
     Frame* frame = (Frame*)sp;
-      
+    
     if(cause & (1UL << 63)) {
         //asm volatile("csrc sstatus, 0x2");
         cause &= ~(1UL << 63);
@@ -85,12 +85,12 @@ uint64 handle_timer() {
         uint64 sstatus = Controller::read_sstatus();
         
         TCB::resetTimeCounter();
-        Controller::mask_clear_sip(Controller::SIP_SSIP);
         TCB::dispatch();
         
         Controller::write_sstatus(sstatus); 
         Controller::write_sepc(sepc);
     }
+    Controller::mask_clear_sip(Controller::SIP_SSIP);
     return 0;
 }
 
@@ -112,10 +112,10 @@ uint64 handle_syscall(uint64 a0, uint64 a1, uint64 a2, uint64 a3) {
             uint64 sepc = Controller::read_sepc();
             uint64 sstatus = Controller::read_sstatus();
             
-             TCB::dispatch();
+            TCB::dispatch();
             
-            Controller::write_sstatus(sstatus); 
             Controller::write_sepc(sepc);
+            Controller::write_sstatus(sstatus); 
             return 0UL;
         }
         default:
