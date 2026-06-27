@@ -12,14 +12,10 @@ int main() {
     MemoryAllocator::init();
     Controller::write_stvec((uint64)&trap_entry);
     
-    //TCB* mainT = TCB::create(nullptr, nullptr);
     TCB* mainT = new TCB(nullptr, nullptr, DEFAULT_TIME_SLICE);
     TCB::running = mainT;
-    
     TCB* user = TCB::create(userMain, nullptr);
-    //thread_t* user = nullptr;
-    //thread_create(user, userMain, nullptr);
-    //Scheduler::printQueue();
+    
     Controller::mask_set_sstatus(Controller::SSTATUS_SIE);
     
     while(!(user)->isFinished()) {

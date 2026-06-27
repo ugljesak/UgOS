@@ -3,7 +3,6 @@
 
 void Controller::sReturn(){
     asm volatile("csrw sepc, ra");
-    //Controller::mask_clear_sstatus(Controller::SSTATUS_SPP);
     asm volatile("sret");
 }
 

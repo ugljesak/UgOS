@@ -79,6 +79,7 @@ uint64 handle_trap(uint64 cause, uint64 sp, uint64 a0, uint64 a1, uint64 a2, uin
 uint64 handle_timer() {
     TCB::incTimeCounter();
     // printLine("Timer okinut.");
+    Controller::mask_clear_sip(Controller::SIP_SSIP);
     if(TCB::getTimeCounter() >= TCB::running->getTimeSlice()) {
         
         uint64 sepc = Controller::read_sepc();
@@ -90,7 +91,6 @@ uint64 handle_timer() {
         Controller::write_sstatus(sstatus); 
         Controller::write_sepc(sepc);
     }
-    Controller::mask_clear_sip(Controller::SIP_SSIP);
     return 0;
 }
 

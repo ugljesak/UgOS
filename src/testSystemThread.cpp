@@ -2,7 +2,7 @@
 #include "../h/syscall_c.hpp"
 #include "../h/testSystemThread.hpp"
 #include "../h/printing.hpp"
-
+#include "../h/Controller.hpp"
 
 static volatile bool finishedA = false;
 static volatile bool finishedB = false;

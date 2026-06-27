@@ -8,10 +8,6 @@
 
 void testMemoryAllocator() {
 
-    printReg("scause", 1);
-    printReg("sepc", 1);
-    printReg("stval", 1);
-
     printLine("Start");
     void* a=mem_alloc(64);
     printValue("a", (uint64)a);

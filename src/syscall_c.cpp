@@ -1,16 +1,5 @@
 #include "../h/syscall_c.hpp"
 
-uint64 ecall(uint64 code, uint64 a1 = 0UL, uint64 a2 = 0UL, uint64 a3 = 0UL, uint64 a4 = 0UL) {
-    
-    uint64 res;
-    asm volatile (
-        "ecall\n"
-        "mv %0, a0"
-        : "=r" (res)
-    );
-
-    return res;
-}
 
 void* mem_alloc(size_t size) {
     // ceil(size/MEM_BLOCK_SIZE)

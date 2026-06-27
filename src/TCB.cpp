@@ -2,7 +2,7 @@
 #include "../h/Scheduler.hpp"
 #include "../h/utils.hpp"
 #include "../h/Controller.hpp"
-
+#include "../h/syscall_c.hpp"
 
 void userThreadStart();
 
@@ -18,7 +18,7 @@ void TCB::threadWrapper() {
         running->body(running->arg);
     }
     running->finished = true; 
-    dispatch();
+    thread_dispatch();
 }
 
 TCB::TCB(Body body, void* arg, uint64 timeSlice) : 
@@ -46,12 +46,6 @@ TCB* TCB::create(Body body, void* arg) {
     Scheduler::put(tcb);
     return tcb;    
 }
-TCB* TCB::createMain(Body body, void* arg) {
-    TCB* tcb = new TCB(body, arg, DEFAULT_TIME_SLICE );
-    //asm volatile("mv %0, ra" : "=r"(tcb->context.ra));
-    //asm volatile("mv %0, sp" : "=r"(tcb->context.sp));
-    return tcb;
-}
 
 
 void TCB::lazyFree() {
@@ -75,24 +69,25 @@ void TCB::dispatch() {
     
     //printValue("oldT.id", oldT->id);
     //printValue("newT.id", newT->id);
+    if(newT == nullptr) {
+        while(newT == nullptr) {
+            Controller::mask_set_sstatus(Controller::SSTATUS_SIE);
+            newT = Scheduler::get();
+        }
+    }
     if (oldT != newT) {
-        // if(running->id == 0) {
-        //     Controller::mask_set_sstatus(Controller::SSTATUS_SPP);
-        // }
-        // else {
-        //     Controller::mask_clear_sstatus(Controller::SSTATUS_SPP);
-        // }
         TCB::running = newT;
+        if(running->id == 0) {
+            Controller::mask_set_sstatus(Controller::SSTATUS_SPP);
+        }
+        else {
+            Controller::mask_clear_sstatus(Controller::SSTATUS_SPP);
+        }
+        //Controller::mask_clear_sstatus(Controller::SSTATUS_SPP);
         yield(&oldT->context, &newT->context);
     }
 }
 
-void TCB::init() {
-    
-    // mainT->context.sp = (uint64)((char*)mainT->kernelStack + DEFAULT_STACK_SIZE - 112);
-    
-    //Controller::mask_set_sstatus(Controller::::SSTATUS_SIE);
-}
 
 void TCB::debugPrint() {
     printString("=== TCB DEBUG ===\n");

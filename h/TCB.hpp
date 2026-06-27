@@ -19,7 +19,6 @@ public:
     static int counter;
     
     static TCB* create(Body body, void* arg);
-    static TCB* createMain(Body body, void* arg);
     //static TCB* createUserThread(Body body, void* arg);
     static void dispatch();
     
@@ -33,7 +32,6 @@ public:
     inline static void incTimeCounter() {timeCounter++;}
     inline static void resetTimeCounter() {timeCounter = 0;}
 
-    static void init();
     void debugPrint();
 
     void* operator new(size_t size) {
