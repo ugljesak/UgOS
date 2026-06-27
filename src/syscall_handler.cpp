@@ -85,12 +85,12 @@ uint64 handle_timer() {
         uint64 sstatus = Controller::read_sstatus();
         
         TCB::resetTimeCounter();
+        Controller::mask_clear_sip(Controller::SIP_SSIP);
         TCB::dispatch();
         
         Controller::write_sstatus(sstatus); 
         Controller::write_sepc(sepc);
     }
-    Controller::mask_clear_sip(Controller::SIP_SSIP);
     return 0;
 }
 
@@ -104,8 +104,10 @@ uint64 handle_syscall(uint64 a0, uint64 a1, uint64 a2, uint64 a3) {
         case 0x11:
             return (uint64)TCB::create((void(*)(void*))a2, (void*)a3);
         case 0x12:
-            return 0UL;    
-            //return (uint64)TCB::exit();
+            TCB::running->setFinished();
+            TCB::dispatch();
+            return 0UL;
+            
         case 0x13: {
             uint64 sepc = Controller::read_sepc();
             uint64 sstatus = Controller::read_sstatus();

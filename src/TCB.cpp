@@ -22,7 +22,7 @@ void TCB::threadWrapper() {
 }
 
 TCB::TCB(Body body, void* arg, uint64 timeSlice) : 
-    userStack(body ? (uint64*)MemoryAllocator::mem_alloc(64*DEFAULT_STACK_SIZE) : nullptr),
+    userStack(body ? (uint64*)MemoryAllocator::mem_alloc(DEFAULT_STACK_SIZE) : nullptr),
     id(counter++),
     timeSlice(timeSlice),
     body(body),
@@ -36,11 +36,11 @@ TCB::TCB(Body body, void* arg, uint64 timeSlice) :
 TCB* TCB::create(Body body, void* arg) {
     TCB* tcb = new TCB(body, arg, DEFAULT_TIME_SLICE);
     tcb->context.ra = (uint64)&threadWrapper;
-    tcb->context.sp = (uint64)((char*)tcb->userStack + 64*DEFAULT_STACK_SIZE);
+    tcb->context.sp = (uint64)((char*)tcb->userStack + DEFAULT_STACK_SIZE);
     tcb->context.sp &= ~0xF;
-    // for(int i = 0; i < 12; ++i) {
-    //     tcb->context.s[i] = 0;
-    // }
+    for(int i = 0; i < 12; ++i) {
+        tcb->context.s[i] = 0;
+    }
     Scheduler::put(tcb);
     return tcb;    
 }
@@ -87,7 +87,7 @@ void TCB::dispatch() {
 
 void TCB::init() {
     
-    // mainT->context.sp = (uint64)((char*)mainT->kernelStack + 64*DEFAULT_STACK_SIZE - 112);
+    // mainT->context.sp = (uint64)((char*)mainT->kernelStack + DEFAULT_STACK_SIZE - 112);
     
     //Controller::mask_set_sstatus(Controller::::SSTATUS_SIE);
 }

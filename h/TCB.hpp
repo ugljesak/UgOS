@@ -8,7 +8,7 @@
 struct Context {
     uint64 ra;
     uint64 sp;
-    //uint64 s[12];
+    uint64 s[12];
 };
 
 class TCB {
@@ -26,7 +26,8 @@ public:
     inline Context* getContext() {return &context;}
 
     inline bool isFinished() const {return finished;}
-    
+    inline void setFinished() {finished = true;}
+
     inline uint64 getTimeSlice() const { return timeSlice;}
     inline static uint64 getTimeCounter() { return timeCounter;}
     inline static void incTimeCounter() {timeCounter++;}

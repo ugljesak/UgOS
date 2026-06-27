@@ -3,14 +3,14 @@
 #include "../h/testSystemThread.hpp"
 #include "../h/Controller.hpp"
 
-void userMain(void* arg) {
+void userMain(void*) {
     printLine("wow");
     //printLine("kurcina.");
     //__putc('$');
     //testMemoryAllocator();
     //printLine("Finished memory testing.");
     
-    System_Mode_test();
+    Threads_C_API_test();
     printLine("Finished threads testing.");
 
 }
