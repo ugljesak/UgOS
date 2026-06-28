@@ -1,8 +1,10 @@
 #include "../h/Scheduler.hpp"
 #include "../h/utils.hpp"
+#include "../h/syscall_c.hpp"
 
 TCB* Scheduler::head = nullptr;
 TCB* Scheduler::tail = nullptr;
+SleepQueue Scheduler::sleepQueue = SleepQueue();
 
 void Scheduler::put(TCB* thread) {
     thread->next = nullptr;
@@ -32,6 +34,20 @@ TCB* Scheduler::get() {
     return t;
 }
 
+void Scheduler::sleepTick() {
+    if(sleepQueue.head != nullptr) {
+        //printValue("tick dist", sleepQueue.head->dist);
+        sleepQueue.tick();
+    }
+}
+
+int Scheduler::sleep(TCB* thread, uint64 ticks) {
+    if(ticks <= 0) return -1;
+    thread->blocked = true;
+    sleepQueue.insert(thread, ticks);
+    TCB::dispatch();
+    return 0;
+}
 
 void Scheduler::printQueue() {
     TCB* t = head;

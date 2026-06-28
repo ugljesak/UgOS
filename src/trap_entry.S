@@ -1,5 +1,4 @@
 .global _Z10trap_entryv
-#.global restore_and_sret
 .align 4
 .type _Z10trap_entryv @function
 
@@ -57,7 +56,7 @@ _Z10trap_entryv:
     mv a2, a0
     mv a1, sp
     csrr a0, scause
-    call _Z11handle_trapmmmmmm
+    call _ZN7Handler11handle_trapEmmmmmm
     
 
 #restore_and_sret:

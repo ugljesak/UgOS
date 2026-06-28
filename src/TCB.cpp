@@ -12,14 +12,22 @@ uint64 TCB::timeCounter = 0;
 int TCB::counter = 0;
 
 void TCB::threadWrapper() {
-    Controller::sReturn();
-    printValue("id", running->id);
+    if (!running->isDaemon()) {
+        Controller::sReturn();
+    }
     if (running->body != nullptr) {
         running->body(running->arg);
     }
     running->finished = true; 
     thread_dispatch();
 }
+
+TCB* TCB::createDaemon(Body body, void* arg) {
+    TCB* daemonT = create(body, arg);
+    daemonT->daemon = true;
+    return daemonT;
+}
+
 
 TCB::TCB(Body body, void* arg, uint64 timeSlice) : 
     userStack(body ? (uint64*)MemoryAllocator::mem_alloc(DEFAULT_STACK_SIZE) : nullptr),
@@ -28,7 +36,10 @@ TCB::TCB(Body body, void* arg, uint64 timeSlice) :
     body(body),
     arg(arg),
     next(nullptr),
-    finished(false)
+    finished(false),
+    blocked(false),
+    semClosed(false),
+    daemon(false)
 {
     
 }
@@ -62,22 +73,20 @@ void TCB::dispatch() {
     lazyFree();
 
     TCB* oldT = TCB::running;
-    if(!oldT->isFinished()) {
+    if(!oldT->isFinished() && !oldT->isBlocked()) {
         Scheduler::put(oldT);
     }
     TCB* newT = Scheduler::get();
     
     //printValue("oldT.id", oldT->id);
     //printValue("newT.id", newT->id);
-    if(newT == nullptr) {
-        while(newT == nullptr) {
-            Controller::mask_set_sstatus(Controller::SSTATUS_SIE);
-            newT = Scheduler::get();
-        }
+    while(newT == nullptr) {
+        Controller::mask_set_sstatus(Controller::SSTATUS_SIE);
+        newT = Scheduler::get();
     }
     if (oldT != newT) {
         TCB::running = newT;
-        if(running->id == 0) {
+        if(running->isDaemon()) {
             Controller::mask_set_sstatus(Controller::SSTATUS_SPP);
         }
         else {

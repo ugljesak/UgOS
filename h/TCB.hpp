@@ -19,19 +19,22 @@ public:
     static int counter;
     
     static TCB* create(Body body, void* arg);
+    static TCB* createDaemon(Body body, void* arg);
     //static TCB* createUserThread(Body body, void* arg);
-    static void dispatch();
     
-    inline Context* getContext() {return &context;}
+    //inline Context* getContext() {return &context;}
 
     inline bool isFinished() const {return finished;}
     inline void setFinished() {finished = true;}
 
-    inline uint64 getTimeSlice() const { return timeSlice;}
-    inline static uint64 getTimeCounter() { return timeCounter;}
-    inline static void incTimeCounter() {timeCounter++;}
-    inline static void resetTimeCounter() {timeCounter = 0;}
+    inline bool isBlocked() const {return blocked;}
+    inline void block() {blocked = true;}
+    inline void unblock() {blocked = false;}
 
+    inline bool isDaemon() const {return daemon;}
+
+    inline uint64 getTimeSlice() const { return timeSlice;}
+    
     void debugPrint();
 
     void* operator new(size_t size) {
@@ -52,8 +55,9 @@ public:
         delete[] userStack;
     }
 
-    TCB(Body body, void* arg, uint64 timeSlice);
+    TCB(Body body, void* arg, uint64 timeSlice = DEFAULT_TIME_SLICE);
 private:
+    static void dispatch();
 
     static void lazyFree();
     static TCB* toFree;
@@ -68,15 +72,21 @@ private:
     Body body;
     void* arg;
     
-    TCB* next = nullptr;
-    bool finished = false;
+    TCB* next;
+    bool finished;
     
-    
+    bool blocked;
+    bool semClosed;
+
+    bool daemon;
 
     static void threadWrapper();
     static void yield(::Context* oldContext, ::Context* newContext);
 
     friend class Scheduler;
+    friend class Handler;
+    friend class _Sem;
+    friend class ConsoleBuffer;
 };
 
 #endif // UGOS_TCB_H

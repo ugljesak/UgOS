@@ -1,40 +1,30 @@
+#include "../lib/console.h"
+#include "../h/Handler.hpp"
 #include "../h/MemoryAllocator.hpp"
 #include "../h/TCB.hpp"
 #include "../h/utils.hpp"
 #include "../h/Controller.hpp"
-#include "../lib/console.h"
+#include "../h/_Sem.hpp"
+#include "../h/Scheduler.hpp"
+#include "../h/OutputWorker.hpp"
+#include "../h/syscall_c.hpp"
+#include "../h/InputWorker.hpp"
 
-
-struct Frame {
-    uint64 ra;
-    uint64 sp;
-    uint64 gp;
-    uint64 tp;
-    uint64 t[7];
-    uint64 s[12];
-    uint64 a[8];
-    uint64 sepc;
-    uint64 sstatus;
-};
-
-uint64 handle_syscall(uint64 a0, uint64 a1, uint64 a2, uint64 a3);
-uint64 handle_timer();
-
-uint64 handle_trap(uint64 cause, uint64 sp, uint64 a0, uint64 a1, uint64 a2, uint64 a3) { 
-    //printValue("TRAP cause", cause);
+uint64 Handler::handle_trap(uint64 cause, uint64 sp, uint64 a0, uint64 a1, uint64 a2, uint64 a3) { 
     Frame* frame = (Frame*)sp;
-    
+    //printValue("TRAP CAUSE", cause);
+
     if(cause & (1UL << 63)) {
-        //asm volatile("csrc sstatus, 0x2");
         cause &= ~(1UL << 63);
         switch(cause) {
             case 0x01:
                 handle_timer();
                 break;
             case 0x09:
-                console_handler();
+                handle_console();
                 break;
             default:
+                printValue("Illegal cause", cause);
                 break;
         }
         return 0UL;
@@ -43,7 +33,7 @@ uint64 handle_trap(uint64 cause, uint64 sp, uint64 a0, uint64 a1, uint64 a2, uin
         // Unutrasnji prekid
         switch(cause) {
             case 0x02:
-                printValue("ILLEGAL INST AT SEPC", frame->sepc);
+                printValue("ILLEGAL INSTRUCTION AT SEPC", frame->sepc);
                 Controller::exit();
                 break;
             case 0x05:
@@ -58,8 +48,7 @@ uint64 handle_trap(uint64 cause, uint64 sp, uint64 a0, uint64 a1, uint64 a2, uin
             case 0x08:
             case 0x09: {
                 uint64 volatile ret = handle_syscall(a0, a1, a2, a3);
-                // ((uint64*)sp)[31] += 4; // sepc += 4;
-                // ((uint64*)sp)[23] = ret; // a0 = ret;
+                
                 frame->sepc += 4;
                 frame->a[0] = ret;
                 
@@ -67,7 +56,8 @@ uint64 handle_trap(uint64 cause, uint64 sp, uint64 a0, uint64 a1, uint64 a2, uin
             }
             default:
                 printValue("UNKNOWN CODE", cause);
-                printValue("SEPC =", frame->sepc);
+                printValue("SEPC", frame->sepc);
+                printValue("SP", sp);
                 Controller::exit();
                 
                 return 0UL;
@@ -76,16 +66,19 @@ uint64 handle_trap(uint64 cause, uint64 sp, uint64 a0, uint64 a1, uint64 a2, uin
     return 0UL;
 }
 
-uint64 handle_timer() {
-    TCB::incTimeCounter();
+uint64 Handler::handle_timer() {
+    TCB::timeCounter++;
     // printLine("Timer okinut.");
     Controller::mask_clear_sip(Controller::SIP_SSIP);
-    if(TCB::getTimeCounter() >= TCB::running->getTimeSlice()) {
+
+    Scheduler::sleepTick();
+    
+    if(TCB::timeCounter >= TCB::running->getTimeSlice()) {
         
         uint64 sepc = Controller::read_sepc();
         uint64 sstatus = Controller::read_sstatus();
         
-        TCB::resetTimeCounter();
+        TCB::timeCounter = 0;
         TCB::dispatch();
         
         Controller::write_sstatus(sstatus); 
@@ -94,7 +87,23 @@ uint64 handle_timer() {
     return 0;
 }
 
-uint64 handle_syscall(uint64 a0, uint64 a1, uint64 a2, uint64 a3) {
+uint64 Handler::handle_console() {
+    int irq = plic_claim();
+
+    if(irq == CONSOLE_IRQ) {
+        volatile uint8* consoleStatus = (volatile uint8*)CONSOLE_STATUS;
+        volatile uint8* consoleRXData = (volatile uint8*)CONSOLE_RX_DATA;
+
+        while(*consoleStatus & CONSOLE_RX_STATUS_BIT) {
+            char c = *consoleRXData;
+            InputWorker::inputBuffer->putFromISR(c);
+        }
+        plic_complete(CONSOLE_IRQ);
+    }
+    return 0UL;
+}
+
+uint64 Handler::handle_syscall(uint64 a0, uint64 a1, uint64 a2, uint64 a3) {
     //printValue("Kod op", a0);
     switch (a0) {
         case 0x01:
@@ -102,7 +111,7 @@ uint64 handle_syscall(uint64 a0, uint64 a1, uint64 a2, uint64 a3) {
         case 0x02:
             return (uint64)MemoryAllocator::mem_free((void*)a1);
         case 0x11:
-            return (uint64)TCB::create((void(*)(void*))a2, (void*)a3);
+            return (uint64)TCB::create((void(*)(void*))a1, (void*)a2);
         case 0x12:
             TCB::running->setFinished();
             TCB::dispatch();
@@ -118,7 +127,27 @@ uint64 handle_syscall(uint64 a0, uint64 a1, uint64 a2, uint64 a3) {
             Controller::write_sstatus(sstatus); 
             return 0UL;
         }
+        case 0x21:
+            return (uint64)(new _Sem((unsigned)a1));
+        case 0x22:
+            return (uint64)((_Sem*)a1)->close();
+        case 0x23:
+            return (uint64)((_Sem*)a1)->wait();
+        case 0x24:
+            return (uint64)((_Sem*)a1)->signal();
+        case 0x25:
+            return (uint64)((_Sem*)a1)->waitN((unsigned)a2);
+        case 0x26:
+            return (uint64)((_Sem*)a1)->signalN((unsigned)a2);
+        case 0x31:
+            return (uint64)(Scheduler::sleep(TCB::running, a1));
+        case 0x41:
+            return (uint64)InputWorker::get();
+        case 0x42:{
+            return (uint64)(OutputWorker::put(a1));
+        }
         default:
+            printLine("Invalid ecall operation code.");
             return 0UL;
     }
 }

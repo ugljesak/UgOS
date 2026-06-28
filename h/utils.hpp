@@ -1,8 +1,9 @@
 #ifndef UGOS_UTILS_HPP
 #define UGOS_UTILS_HPP
 
-#include "../lib/console.h"
+//#include "../lib/console.h"
 #include "../lib/hw.h"
+#include "../h/syscall_c.hpp"
 
 #define printReg(name, priv) \
     do { \
@@ -16,13 +17,13 @@
 
 inline void printString(const char* str) {
     while(*str != '\0') {
-        __putc(*(str++));
+        putc(*(str++));
     }
 }
 
 inline void printLine(const char* str) {
     printString(str);
-    __putc('\n');
+    putc('\n');
 }
 
 inline void printDec(uint64 val) {
@@ -39,7 +40,7 @@ inline void printHex(uint64 val) {
     const char* hex = "0123456789abcdef";
     printString("0x");
     for (int i=60; i>=0; i-=4) {
-        __putc(hex[(val >> i) & 0xF]);
+        putc(hex[(val >> i) & 0xF]);
     }
 }
 
@@ -47,7 +48,7 @@ inline void printValue(const char* name, uint64 val) {
     printString(name);
     printString(" = ");
     printHex(val);
-    __putc('\n');
+    putc('\n');
 }
 
 #endif // UGOS_UTILS_HPP
